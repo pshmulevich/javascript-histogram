@@ -1,0 +1,28 @@
+h1 {
+  background-color: grey;
+  text-align: center;
+}
+
+input {
+  width: 99%;
+}
+
+.svg-container {
+  margin-top: 5px;
+  border: thin solid black;
+  height: 250px; /* Do not change the height */
+  width: 100%;
+}
+
+div.svg-parent {
+  height: 250px; /* Do not change the height */
+  width: 100%;
+}
+
+rect {
+  fill: darkblue;
+}
+
+rect:hover {
+  fill: green;
+}
