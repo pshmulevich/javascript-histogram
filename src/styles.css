@@ -1,3 +1,7 @@
+body {
+  min-width: 1020px;
+}
+
 h1 {
   background-color: grey;
   text-align: center;
@@ -7,16 +11,16 @@ input {
   width: 99%;
 }
 
-.svg-container {
+svg.svg-container {
   margin-top: 5px;
   border: thin solid black;
-  height: 250px; /* Do not change the height */
+  margin-right: 5px;
   width: 100%;
+  overflow: scroll;
 }
 
 div.svg-parent {
-  height: 250px; /* Do not change the height */
-  width: 100%;
+  padding-right: 5px;
 }
 
 rect {
