@@ -2,18 +2,17 @@
 const drawHistogram = () => {
   const inputValue = document.getElementById("dataInput").value;
   const inputArray = parseInput(inputValue);
-  const buckets = makeBuckets(inputArray);
+  const { bucketMap, rangeOfValues } = makeBuckets(inputArray);
 
   //traverses map, displays key and value
   const values = [];
   // transfer data from the map to an array
-  buckets.forEach((value, key, map) => {
+  bucketMap.forEach((value, key, map) => {
     // console.log(`${key} => ${value}`);
     values.push({ key, value });
   });
 
-  // const values = buckets.values;
-  drawBarChart(values);
+  drawBarChart(values, rangeOfValues);
 };
 
 const parseInput = (inputValue) => {
@@ -34,28 +33,35 @@ const makeBuckets = (inputArray) => {
   const maxElement = inputArray[inputArray.length - 1];
   // console.log("minElement", minElement);
   // console.log("maxElement", maxElement);
+  const rangeOfValues = maxElement - minElement;
   for (var i = minElement; i <= maxElement; i++) {
     bucketMap.set(i, 0); //pre-fill buckets with 0's
   }
   inputArray.forEach((element) => {
     bucketMap.set(element, bucketMap.get(element) + 1);
   });
-  return bucketMap;
+  return { bucketMap, rangeOfValues };
 };
 
 const generateRandomArray = (size, max) => {
   //see: https://stackoverflow.com/a/52327785
-  return Array.from({ length: size }, () => Math.floor(Math.random() * max));
+  return Array.from(
+    { length: size },
+    () => Math.floor(Math.random() * max) - max / 2
+  );
 };
 //----------Histogram End--------------------------------------
 
 //---------Barchart Section------------------------------------
 // See: https://css-tricks.com/how-to-make-charts-with-svg/
 // Used the pattern but made it dynamic
-
+const minChartWidth = 1000;
+const maxRectWidth = 40;
+const minRectWidth = 2;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const renderSvg = (svgHeight, svgWidth) => {
+const renderSvg = (svgHeight) => {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");
+  svg.setAttribute("height", svgHeight);
   svg.setAttribute("class", "svg-container");
   const svgParent = document.getElementById("svg-parent");
   if (svgParent.childNodes[0]) {
@@ -88,11 +94,10 @@ const renderRect = (g, x, y, width, height, keyValue) => {
   return rect;
 };
 
-const drawBarChart = (keyValues) => {
+const drawBarChart = (keyValues, rangeOfValues) => {
   // console.log("values: ", keyValues);
   const svgHeight = 250;
-  const svgWidth = 600;
-  const svg = renderSvg(svgHeight, svgWidth);
+  const svg = renderSvg(svgHeight);
 
   // Find max value to normalize the bar height to fit into fixed height chart
   const maxValue = keyValues.reduce((max, element) => {
@@ -108,9 +113,14 @@ const drawBarChart = (keyValues) => {
     return Math.floor(keyValue.value * scaleCoef);
   });
 
+  // console.log("rangeOfValues:", rangeOfValues);
+  const minComputedRectWidth = Math.min(
+    maxRectWidth,
+    minChartWidth / (rangeOfValues + 1)
+  );
   normalizedValues.forEach((value, index) => {
     const g = renderG(svg);
-    const rectWidth = 20;
+    const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
     const rectHeight = value;
     const x = rectWidth * index;
     const y = verticalOffset - value; // Because chart inverted
@@ -124,6 +134,6 @@ const inputFieldElement = document.getElementById("dataInput");
 // Sets up an onchange event handler for the input field
 inputFieldElement.onchange = drawHistogram;
 // Generates a random array for input field
-inputFieldElement.value = generateRandomArray(100, 30);
+inputFieldElement.value = generateRandomArray(100000, 200);
 // Draw a histogram from default filler data
 drawHistogram();
