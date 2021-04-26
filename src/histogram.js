@@ -155,6 +155,6 @@ const inputFieldElement = document.getElementById("dataInput");
 // Sets up an onchange event handler for the input field
 inputFieldElement.onchange = drawHistogram;
 // Generates a random array for input field
-inputFieldElement.value = generateRandomArray(100, 200);
+inputFieldElement.value = generateRandomArray(1000, 100);
 // Draw a histogram from default filler data
 drawHistogram();
