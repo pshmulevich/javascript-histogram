@@ -1,4 +1,7 @@
 //----------Histogram Section--------------------------------------
+/**
+ * Draws the histogram via the barchart
+ */
 const drawHistogram = () => {
   const inputValue = document.getElementById("dataInput").value;
   const inputArray = parseInput(inputValue);
@@ -15,18 +18,24 @@ const drawHistogram = () => {
   drawBarChart(values, rangeOfValues);
 };
 
+/**
+ * Splits input string on commas, converts to numbers, then sorts
+ * @param String inputValue
+ */
 const parseInput = (inputValue) => {
   const inputData = inputValue.split(",");
   const numericData = inputData.map((element) => parseInt(element, 10));
-
   // Sorted alphabetically unless a sorter function is provided
   // See: https://stackoverflow.com/a/1063027
   const sortedData = numericData.sort((a, b) => a - b);
   // console.log(sortedData);
-
   return sortedData;
 };
 
+/**
+ * Creates a bucket map
+ * @param int[] inputArray
+ */
 const makeBuckets = (inputArray) => {
   const bucketMap = new Map();
   const minElement = inputArray[0];
@@ -37,12 +46,19 @@ const makeBuckets = (inputArray) => {
   for (var i = minElement; i <= maxElement; i++) {
     bucketMap.set(i, 0); //pre-fill buckets with 0's
   }
+  // Creates more buckets than might ever be filled.
+  // done because we do not want to skip buckets (render all)
   inputArray.forEach((element) => {
     bucketMap.set(element, bucketMap.get(element) + 1);
   });
   return { bucketMap, rangeOfValues };
 };
 
+/**
+ * Creates a randomized array meant as default values for the barchart
+ * @param int size - number of random generated elements
+ * @param int max - largest element
+ */
 const generateRandomArray = (size, max) => {
   //see: https://stackoverflow.com/a/52327785
   return Array.from(
@@ -58,7 +74,12 @@ const generateRandomArray = (size, max) => {
 const minChartWidth = 1000;
 const maxRectWidth = 40;
 const minRectWidth = 2;
+const svgHeight = 250;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+/**
+ * Renders the svg element
+ * @param int svgHeight
+ */
 const renderSvg = (svgHeight) => {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");
   svg.setAttribute("height", svgHeight);
@@ -71,21 +92,22 @@ const renderSvg = (svgHeight) => {
   return svg;
 };
 
-const renderG = (svg) => {
-  const g = document.createElementNS(SVG_NAMESPACE, "g");
-  g.setAttribute("class", "bar");
-  svg.appendChild(g);
-  return g;
-};
-
-const renderRect = (g, x, y, width, height, keyValue) => {
+/**
+ * Renders the rectangle bar for each 'bucket'
+ * @param Object svg
+ * @param int x
+ * @param int y
+ * @param int width
+ * @param int height
+ * @param Object keyValue
+ */
+const renderRect = (svg, x, y, width, height, keyValue) => {
   const rect = document.createElementNS(SVG_NAMESPACE, "rect");
   rect.setAttribute("x", x);
   rect.setAttribute("y", y);
   rect.setAttribute("width", width);
   rect.setAttribute("height", height);
-  rect.setAttribute("tooltip", "test");
-  g.appendChild(rect);
+  svg.appendChild(rect);
 
   // Title appears on hover
   const title = document.createElementNS(SVG_NAMESPACE, "title");
@@ -93,10 +115,13 @@ const renderRect = (g, x, y, width, height, keyValue) => {
   rect.append(title);
   return rect;
 };
-
+/**
+ * Draws the barchart
+ * @param Object [] keyValues
+ * @param int rangeOfValues
+ */
 const drawBarChart = (keyValues, rangeOfValues) => {
   // console.log("values: ", keyValues);
-  const svgHeight = 250;
   const svg = renderSvg(svgHeight);
 
   // Find max value to normalize the bar height to fit into fixed height chart
@@ -107,25 +132,21 @@ const drawBarChart = (keyValues, rangeOfValues) => {
 
   const scaleCoef = svgHeight / maxValue; //coef larger if height bigger
   const verticalOffset = scaleCoef * maxValue;
-  // Normalize the values for the svg height
-  const normalizedValues = keyValues.map((keyValue) => {
-    // console.log(Math.floor(keyValue.value * scaleCoef));
-    return Math.floor(keyValue.value * scaleCoef);
-  });
 
   // console.log("rangeOfValues:", rangeOfValues);
   const minComputedRectWidth = Math.min(
     maxRectWidth,
     minChartWidth / (rangeOfValues + 1)
   );
-  normalizedValues.forEach((value, index) => {
-    const g = renderG(svg);
-    const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
-    const rectHeight = value;
-    const x = rectWidth * index;
-    const y = verticalOffset - value; // Because chart inverted
 
-    renderRect(g, x, y, rectWidth, rectHeight, keyValues[index]);
+  // For each element render a rectangle bar
+  keyValues.forEach((keyValue, index) => {
+    const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
+    // Normalize the values for the svg height
+    const rectHeight = keyValue.value * scaleCoef;
+    const x = rectWidth * index;
+    const y = verticalOffset - rectHeight; // Because chart inverted
+    renderRect(svg, x, y, rectWidth, rectHeight, keyValues[index]);
   });
 };
 //------------------------Barchart end--------------------------------
@@ -134,6 +155,6 @@ const inputFieldElement = document.getElementById("dataInput");
 // Sets up an onchange event handler for the input field
 inputFieldElement.onchange = drawHistogram;
 // Generates a random array for input field
-inputFieldElement.value = generateRandomArray(100000, 200);
+inputFieldElement.value = generateRandomArray(100, 200);
 // Draw a histogram from default filler data
 drawHistogram();
