@@ -27,6 +27,8 @@ const parseInput = (inputValue) => {
   return sortedData;
 };
 
+// Creates more buckets than might ever be filled.
+// done because we do not want to skip buckets (render all)
 const makeBuckets = (inputArray) => {
   const bucketMap = new Map();
   const minElement = inputArray[0];
@@ -58,6 +60,7 @@ const generateRandomArray = (size, max) => {
 const minChartWidth = 1000;
 const maxRectWidth = 40;
 const minRectWidth = 2;
+const svgHeight = 250;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const renderSvg = (svgHeight) => {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");
@@ -71,21 +74,13 @@ const renderSvg = (svgHeight) => {
   return svg;
 };
 
-const renderG = (svg) => {
-  const g = document.createElementNS(SVG_NAMESPACE, "g");
-  g.setAttribute("class", "bar");
-  svg.appendChild(g);
-  return g;
-};
-
-const renderRect = (g, x, y, width, height, keyValue) => {
+const renderRect = (svg, x, y, width, height, keyValue) => {
   const rect = document.createElementNS(SVG_NAMESPACE, "rect");
   rect.setAttribute("x", x);
   rect.setAttribute("y", y);
   rect.setAttribute("width", width);
   rect.setAttribute("height", height);
-  rect.setAttribute("tooltip", "test");
-  g.appendChild(rect);
+  svg.appendChild(rect);
 
   // Title appears on hover
   const title = document.createElementNS(SVG_NAMESPACE, "title");
@@ -96,7 +91,6 @@ const renderRect = (g, x, y, width, height, keyValue) => {
 
 const drawBarChart = (keyValues, rangeOfValues) => {
   // console.log("values: ", keyValues);
-  const svgHeight = 250;
   const svg = renderSvg(svgHeight);
 
   // Find max value to normalize the bar height to fit into fixed height chart
@@ -107,25 +101,20 @@ const drawBarChart = (keyValues, rangeOfValues) => {
 
   const scaleCoef = svgHeight / maxValue; //coef larger if height bigger
   const verticalOffset = scaleCoef * maxValue;
-  // Normalize the values for the svg height
-  const normalizedValues = keyValues.map((keyValue) => {
-    // console.log(Math.floor(keyValue.value * scaleCoef));
-    return Math.floor(keyValue.value * scaleCoef);
-  });
 
   // console.log("rangeOfValues:", rangeOfValues);
   const minComputedRectWidth = Math.min(
     maxRectWidth,
     minChartWidth / (rangeOfValues + 1)
   );
-  normalizedValues.forEach((value, index) => {
-    const g = renderG(svg);
+  keyValues.forEach((keyValue, index) => {
     const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
-    const rectHeight = value;
+    // Normalize the values for the svg height
+    const rectHeight = keyValue.value * scaleCoef;
     const x = rectWidth * index;
-    const y = verticalOffset - value; // Because chart inverted
+    const y = verticalOffset - rectHeight; // Because chart inverted
 
-    renderRect(g, x, y, rectWidth, rectHeight, keyValues[index]);
+    renderRect(svg, x, y, rectWidth, rectHeight, keyValues[index]);
   });
 };
 //------------------------Barchart end--------------------------------
