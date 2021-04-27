@@ -150,11 +150,33 @@ const drawBarChart = (keyValues, rangeOfValues) => {
   });
 };
 //------------------------Barchart end--------------------------------
+const populatePage = () => {
+  const root = document.getElementById("root");
+  root.innerHTML = `
+  <h1>Histogram</h1>
+  <p><b>Information:</b></p>
+  <p>
+    This Web Application is written using Vanilla Javascript, CSS, and HTML
+  </p>
+  <p><b>Instructions:</b></p>
+  <p>
+    By default, an array of random numbers populates the input field below. A
+    histogram of number frequencies is automatically plotted. Enter a sequence
+    of comma-separated numbers and then press the Tab or Enter key to plot
+    your own histogram.
+  </p>
+  <div>
+    <input type="text" id="dataInput" />
+  </div>
 
+  <div class="svg-parent" id="svg-parent"></div>
+  `;
+};
+populatePage();
 const inputFieldElement = document.getElementById("dataInput");
 // Sets up an onchange event handler for the input field
 inputFieldElement.onchange = drawHistogram;
 // Generates a random array for input field
-inputFieldElement.value = generateRandomArray(100, 200);
+inputFieldElement.value = generateRandomArray(1000, 100);
 // Draw a histogram from default filler data
 drawHistogram();
