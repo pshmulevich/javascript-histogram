@@ -5,9 +5,8 @@
 const drawHistogram = () => {
   const inputValue = document.getElementById("dataInput").value;
   const inputArray = parseInput(inputValue);
-  const { bucketMap, rangeOfValues } = makeBuckets(inputArray);
+  const { bucketMap, rangeOfValues, bucketwidth } = makeBuckets(inputArray);
 
-  //traverses map, displays key and value
   const values = [];
   // transfer data from the map to an array
   bucketMap.forEach((value, key, map) => {
@@ -15,7 +14,7 @@ const drawHistogram = () => {
     values.push({ key, value });
   });
 
-  drawBarChart(values, rangeOfValues);
+  drawBarChart(values, rangeOfValues, bucketwidth);
 };
 
 /**
@@ -32,10 +31,9 @@ const parseInput = (inputValue) => {
   return sortedData;
 };
 
-/**
- * Creates a bucket map
- * @param int[] inputArray
- */
+//========================================================
+// FUNCTION to replace the original makeBuckets function
+//========================================================
 const makeBuckets = (inputArray) => {
   const bucketMap = new Map();
   const minElement = inputArray[0];
@@ -43,16 +41,36 @@ const makeBuckets = (inputArray) => {
   // console.log("minElement", minElement);
   // console.log("maxElement", maxElement);
   const rangeOfValues = maxElement - minElement;
-  for (var i = minElement; i <= maxElement; i++) {
+  // const bucketwidth = Math.ceil(rangeOfValues / 10);
+  const bucketwidth = Math.floor(Math.sqrt(rangeOfValues)); 
+  // const bucketwidth = 10; //hardcoded at 10
+
+  // console.log("bucketWidth:", bucketwidth);
+
+  //------Section for prefilling sub buckets with 0's --------------
+  const minKey = Math.floor(minElement / bucketwidth);
+  const maxKey = Math.floor(maxElement / bucketwidth);
+
+  for (var i = minKey; i <= maxKey; i++) {
     bucketMap.set(i, 0); //pre-fill buckets with 0's
   }
-  // Creates more buckets than might ever be filled.
-  // done because we do not want to skip buckets (render all)
+//------------------------------------------------------------------
   inputArray.forEach((element) => {
-    bucketMap.set(element, bucketMap.get(element) + 1);
+    // Compute bucket key -> if element = 9, bucket 1
+    const bucketKey = Math.floor(element / bucketwidth);
+    // console.log("bucketKey:", bucketKey);
+
+    //value at that key in the bucket
+    const value = bucketMap.get(bucketKey);
+    const existingQuantity = value ? value : 0;
+    bucketMap.set(bucketKey, existingQuantity + 1);
   });
-  return { bucketMap, rangeOfValues };
+  // console.log("BucketMap:", bucketMap);
+  return { bucketMap, rangeOfValues, bucketwidth};
 };
+
+//========================================================
+//========================================================
 
 /**
  * Creates a randomized array meant as default values for the barchart
@@ -101,7 +119,7 @@ const renderSvg = (svgHeight) => {
  * @param int height
  * @param Object keyValue
  */
-const renderRect = (svg, x, y, width, height, keyValue) => {
+const renderRect = (svg, x, y, width, height, keyValue, bucketwidth) => {
   const rect = document.createElementNS(SVG_NAMESPACE, "rect");
   rect.setAttribute("x", x);
   rect.setAttribute("y", y);
@@ -111,7 +129,9 @@ const renderRect = (svg, x, y, width, height, keyValue) => {
 
   // Title appears on hover
   const title = document.createElementNS(SVG_NAMESPACE, "title");
-  title.innerHTML = `Freq of ${keyValue.key}: ${keyValue.value}`;
+  const bucketStart = keyValue.key * bucketwidth;
+  const bucketEnd = bucketStart + bucketwidth;
+  title.innerHTML = `Bucket (${bucketStart} -> ${bucketEnd}), size ${keyValue.value}`;
   rect.append(title);
   return rect;
 };
@@ -120,7 +140,7 @@ const renderRect = (svg, x, y, width, height, keyValue) => {
  * @param Object [] keyValues
  * @param int rangeOfValues
  */
-const drawBarChart = (keyValues, rangeOfValues) => {
+const drawBarChart = (keyValues, rangeOfValues, bucketwidth) => {
   // console.log("values: ", keyValues);
   const svg = renderSvg(svgHeight);
 
@@ -136,17 +156,18 @@ const drawBarChart = (keyValues, rangeOfValues) => {
   // console.log("rangeOfValues:", rangeOfValues);
   const minComputedRectWidth = Math.min(
     maxRectWidth,
-    minChartWidth / (rangeOfValues + 1)
+    minChartWidth / (Math.sqrt(rangeOfValues) + 1)
   );
 
+  const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
   // For each element render a rectangle bar
   keyValues.forEach((keyValue, index) => {
-    const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
+
     // Normalize the values for the svg height
     const rectHeight = keyValue.value * scaleCoef;
     const x = rectWidth * index;
     const y = verticalOffset - rectHeight; // Because chart inverted
-    renderRect(svg, x, y, rectWidth, rectHeight, keyValues[index]);
+    renderRect(svg, x, y, rectWidth, rectHeight, keyValues[index], bucketwidth);
   });
 };
 //------------------------Barchart end--------------------------------
