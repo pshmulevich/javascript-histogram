@@ -31,9 +31,10 @@ const parseInput = (inputValue) => {
   return sortedData;
 };
 
-//========================================================
-// FUNCTION to replace the original makeBuckets function
-//========================================================
+/**
+ * New version of makeBuckets where bucket-size is variable
+ * @param int[] inputArray
+ */
 const makeBuckets = (inputArray) => {
   const bucketMap = new Map();
   const minElement = inputArray[0];
@@ -42,7 +43,7 @@ const makeBuckets = (inputArray) => {
   // console.log("maxElement", maxElement);
   const rangeOfValues = maxElement - minElement;
   // const bucketwidth = Math.ceil(rangeOfValues / 10);
-  const bucketwidth = Math.floor(Math.sqrt(rangeOfValues)); 
+  const bucketwidth = Math.floor(Math.sqrt(rangeOfValues));
   // const bucketwidth = 10; //hardcoded at 10
 
   // console.log("bucketWidth:", bucketwidth);
@@ -54,7 +55,7 @@ const makeBuckets = (inputArray) => {
   for (var i = minKey; i <= maxKey; i++) {
     bucketMap.set(i, 0); //pre-fill buckets with 0's
   }
-//------------------------------------------------------------------
+  //------------------------------------------------------------------
   inputArray.forEach((element) => {
     // Compute bucket key -> if element = 9, bucket 1
     const bucketKey = Math.floor(element / bucketwidth);
@@ -66,11 +67,8 @@ const makeBuckets = (inputArray) => {
     bucketMap.set(bucketKey, existingQuantity + 1);
   });
   // console.log("BucketMap:", bucketMap);
-  return { bucketMap, rangeOfValues, bucketwidth};
+  return { bucketMap, rangeOfValues, bucketwidth };
 };
-
-//========================================================
-//========================================================
 
 /**
  * Creates a randomized array meant as default values for the barchart
@@ -162,7 +160,6 @@ const drawBarChart = (keyValues, rangeOfValues, bucketwidth) => {
   const rectWidth = Math.max(minComputedRectWidth, minRectWidth);
   // For each element render a rectangle bar
   keyValues.forEach((keyValue, index) => {
-
     // Normalize the values for the svg height
     const rectHeight = keyValue.value * scaleCoef;
     const x = rectWidth * index;
